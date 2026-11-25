@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="Adventure Run - Ooo Diyarı">
+	<meta name="keywords" content="Adventure Time, oyun, piksel sanatı, 3D">
+
+	<title>Adventure Run</title>
+
+	<style>
+		/* EARLIEST - even before body parses */
+		html,
+		body {
+			background: #1a0a2e;
+		}
+	</style>
+
+	<link rel="stylesheet" href="css/style.css">
+
+	<style>
+		/* CRITICAL - prevent all white flash */
+		* {
+			box-sizing: border-box;
+			visibility: visible !important;
+		}
+
+		html,
+		body {
+			margin: 0;
+			padding: 0;
+			min-height: 100vh;
+			background: #1a0a2e !important;
+			overflow: hidden;
+			font-family: 'Press Start 2P', cursive;
+			visibility: visible !important;
+		}
+
+		/* Loader - ALWAYS visible */
+		#loader-screen {
+			position: fixed !important;
+			inset: 0;
+			display: flex !important;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			background: linear-gradient(180deg, #1a0a2e 0%, #4a1c6b 50%, #87CEEB 100%) !important;
+			z-index: 99999;
+			visibility: visible !important;
+		}
+
+		#loader-screen.hidden {
+			display: none !important;
+		}
+
+		/* Homepage - hidden until shown */
+		#homepage {
+			position: fixed !important;
+			inset: 0;
+			display: none !important;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			background: linear-gradient(180deg, #87CEEB 0%, #5E9CFF 50%, #FBDD40 100%) !important;
+			font-family: 'Press Start 2P', cursive;
+			visibility: hidden !important;
+		}
+
+		#homepage:not(.hidden) {
+			display: flex !important;
+			visibility: visible !important;
+		}
+
+		/* Game elements hidden */
+		#game-restart.hidden {
+			display: none;
+		}
+
+		#auth-container.hidden {
+			display: none;
+		}
+
+		#login-form.hidden {
+			display: none;
+		}
+
+		#register-form.hidden {
+			display: none;
+		}
+
+		#leaderboard.hidden {
+			display: none;
+		}
+
+		#score-counter.hidden {
+			display: none;
+		}
+
+		#language-selector {
+			display: none;
+		}
+
+		#three-canvas {
+			display: none;
+		}
+
+		.game-started #three-canvas {
+			display: block;
+		}
+
+		.game-started #loader-screen,
+		.game-started #homepage {
+			display: none !important;
+		}
+	</style>
+
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+
+<body>
+	<!-- Loading Screen -->
+	<div id="loader-screen"
+		style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(180deg,#1a0a2e,#4a1c6b 50%,#87CEEB);font-family:'Press Start 2P',cursive;z-index:99999;">
+		<div class="stars">
+			<div class="star" style="top: 10%; left: 20%;"></div>
+			<div class="star" style="top: 30%; left: 70%; animation-delay: 0.5s;"></div>
+			<div class="star" style="top: 50%; left: 40%; animation-delay: 1s;"></div>
+			<div class="star" style="top: 15%; left: 85%; animation-delay: 1.5s;"></div>
+			<div class="star" style="top: 60%; left: 15%; animation-delay: 0.3s;"></div>
+		</div>
+		<div class="container">
+			<h1 class="logo"><span>ADVENTURE</span> RUN</h1>
+			<div class="loading-bar-container">
+				<div class="loading-bar" id="loading-bar"></div>
+			</div>
+			<p class="percentage" id="loading-percentage">0%</p>
+			<p class="status" id="loading-status">Malzemeler toplanıyor...</p>
+			<div class="gems">
+				<span class="gem">💎</span>
+				<span class="gem">💎</span>
+				<span class="gem">💎</span>
+				<span class="gem">💎</span>
+			</div>
+			<p class="tips">İpucu: Bataklık Nehri'ni geçmek için buzun üstüne zıpla!</p>
+		</div>
+		<div class="orb">🔮</div>
+	</div>
+
+	<!-- Homepage -->
+	<div id="homepage" class="hidden">
+		<div class="cloud"></div>
+		<div class="cloud"></div>
+		<div class="cloud"></div>
+		<div class="land-bg"></div>
+		<div class="container">
+			<h1 class="logo"><span>ADVENTURE</span> RUN</h1>
+			<p class="subtitle">Ooo Diyarı Seni Bekliyor!</p>
+			<div class="buttons">
+				<button class="btn btn-start" id="btn-start-game">▶ Macera Başlasın</button>
+				<button class="btn btn-login" id="btn-show-auth">⚔ Giriş Yap / Kayıt Ol</button>
+				<button class="btn btn-leaderboard" id="btn-show-leaderboard-home">🏆 Sıralama</button>
+				<button class="btn btn-logout hidden" id="btn-logout">🚪 Çıkış Yap</button>
+			</div>
+			<p class="credits">Zıplamak için Boşluk tuşuna bas veya dokun</p>
+		</div>
+		<div class="character">🗡️</div>
+		<div class="version">v1.0</div>
+	</div>
+
+	<!-- Game Over -->
+	<div id="game-restart" class="hidden">
+		<h1>OYUN BİTTİ</h1>
+		<img id="btn-restart" src="media/repeat.png">
+		<img id="btn-show-leaderboard-gameover" src="media/leaderboard.png">
+		<img id="btn-menu" src="media/main_menu.png">
+	</div>
+
+	<!-- Auth -->
+	<div id="auth-container" class="hidden">
+		<div id="login-form">
+			<h2>Giriş Yap</h2>
+			<input type="text" id="login-username" placeholder="Kullanıcı Adı">
+			<input type="password" id="login-password" placeholder="Şifre">
+			<button id="btn-login">Giriş Yap</button>
+			<p>Hesabın yok mu? <a href="#" id="show-register">Kayıt Ol</a></p>
+		</div>
+		<div id="register-form" class="hidden">
+			<h2>Kayıt Ol</h2>
+			<input type="text" id="register-username" placeholder="Kullanıcı Adı">
+			<input type="password" id="register-password" placeholder="Şifre">
+			<input type="password" id="register-password-confirm" placeholder="Şifre Tekrar">
+			<button id="btn-register">Kayıt Ol</button>
+			<p>Zaten hesabın var mı? <a href="#" id="show-login">Giriş Yap</a></p>
+		</div>
+	</div>
+
+	<!-- Leaderboard -->
+	<div id="leaderboard" class="hidden">
+		<div>
+			<h1>Sıralama</h1>
+			<div id="leaderboard-list"></div>
+			<button id="btn-close-leaderboard">Kapat</button>
+		</div>
+	</div>
+
+	<div id="score-counter" class="hidden">
+		<span class="score-counter-score"></span>
+	</div>
+
+	<div id="language-selector">
+		<div>
+			<label for="language-select">Dil:</label>
+			<select id="language-select">
+				<option value="tr">Türkçe</option>
+				<option value="en">English</option>
+				<option value="es">Español</option>
+				<option value="ru">Русский</option>
+				<option value="ja">日本語</option>
+				<option value="zh">中文</option>
+				<option value="hi">हिन्दी</option>
+			</select>
+		</div>
+	</div>
+
+	<script src="libs/three/three.min.js"></script>
+	<script src="libs/three/controls/OrbitControls.js"></script>
+	<script src="libs/three/loaders/OBJLoader.js"></script>
+	<script src="libs/vox/vox.min.js"></script>
+	<script src="libs/three/postprocessing/EffectComposer.js"></script>
+	<script src="libs/three/postprocessing/RenderPass.js"></script>
+	<script src="libs/three/postprocessing/ShaderPass.js"></script>
+	<script src="libs/three/shaders/CopyShader.js"></script>
+	<script src="libs/three/shaders/ConvolutionShader.js"></script>
+	<script src="libs/three/postprocessing/SAOPass.js"></script>
+	<script src="libs/three/shaders/SAOShader.js"></script>
+	<script src="libs/three/shaders/DepthLimitedBlurShader.js"></script>
+	<script src="libs/three/shaders/UnpackDepthRGBAShader.js"></script>
+	<script src="libs/nebula/three-nebula.js"></script>
+	<script src="libs/howler/howler.min.js"></script>
+	<script src="libs/visibly/visibly.js"></script>
+	<script src="js/config-high.js?patch=3x1"></script>
+	<script type="module" src="js/build.js"></script>
+
+	<script>
+		const tips = [
+			"İpucu: Bonus puan için elmasları topla!",
+			"İpucu: Bataklık Nehri'ni geçmek için buzun üstüne zıpla!",
+			"İpucu: Ateş Krallığı'ndaki Ateş Kurtlarından kaçın!",
+			"İpucu: Düşmanları yenmek için kılıcını kullan!",
+			"İpucu: Şeker Krallığı'nın tüm mağaralarını keşfet!",
+			"İpucu: Limon Soyucusu'nun gardiyanlarına dikkat et!"
+		];
+
+		function simulateLoading() {
+			const loadingBar = document.getElementById('loading-bar');
+			const percentage = document.getElementById('loading-percentage');
+			const status = document.getElementById('loading-status');
+			const tipsEl = document.querySelector('.tips');
+			const loaderScreen = document.getElementById('loader-screen');
+			const homepage = document.getElementById('homepage');
+
+			const loadingSteps = [
+				"Malzemeler toplanıyor...",
+				"Karakter yükleniyor...",
+				"Şeker Krallığı inşa ediliyor...",
+				"Buz Tırmanışı hazırlanıyor...",
+				"Elmaslar sayılıyor...",
+				"Hazır!"
+			];
+
+			let progress = 0;
+
+			function load() {
+				if (progress < 100) {
+					progress += Math.random() * 15 + 5;
+					if (progress > 100) progress = 100;
+
+					loadingBar.style.width = progress + '%';
+					percentage.textContent = Math.floor(progress) + '%';
+
+					const stepIndex = Math.floor((progress / 100) * (loadingSteps.length - 1));
+					status.textContent = loadingSteps[stepIndex];
+
+					if (Math.random() > 0.7) {
+						tipsEl.textContent = tips[Math.floor(Math.random() * tips.length)];
+					}
+
+					setTimeout(load, 200 + Math.random() * 300);
+				} else {
+					loaderScreen.classList.add('hidden');
+					homepage.classList.remove('hidden');
+				}
+			}
+
+			setTimeout(load, 500);
+		}
+
+		window.addEventListener('load', simulateLoading);
+
+		// Fallback transition after game loads
+		setTimeout(() => {
+			const loader = document.getElementById('loader-screen');
+			const homepage = document.getElementById('homepage');
+			if (loader && !loader.classList.contains('hidden')) {
+				loader.classList.add('hidden');
+				loader.style.display = 'none';
+			}
+			if (homepage) {
+				homepage.classList.remove('hidden');
+				homepage.style.display = 'flex';
+			}
+		}, 4000);
+	</script>
+</body>
+
+</html>

@@ -1,0 +1,17 @@
+# Bagimliliklar ve derleme ciktilari
+node_modules/
+dist/
+
+# Gizli bilgiler ve veritabani
+.env
+*.db
+*.sqlite
+
+# Sistem dosyalari
+.DS_Store
+__MACOSX/
+Thumbs.db
+
+# Yapay zeka arac dosyalari
+.opencode/
+.paul/
