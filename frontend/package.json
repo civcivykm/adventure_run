@@ -1,8 +1,8 @@
 {
-  "name": "chrome-dino-3d",
+  "name": "adventure-run-frontend",
   "version": "1.0.0",
   "type": "module",
-  "description": "A modern 3D remake of Chrome's beloved Dino game, built with Three.js and WebGL.",
+  "description": "Adventure Run - a browser-based 3D endless runner built with Three.js and WebGL (based on dino3d).",
   "main": "vite.config.js",
   "scripts": {
     "dev": "vite",
@@ -13,7 +13,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "GPL-3.0",
   "dependencies": {
     "marked": "^17.0.1",
     "vite": "^5.0.0"

@@ -5,6 +5,12 @@ import db from '../database.js';
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'adventure_run_secret_key';
+if (!process.env.JWT_SECRET) {
+  console.warn('[auth] JWT_SECRET is not set - using the development default. Set it in production!');
+}
+
+// 3-20 characters: letters (Turkish included), digits, dot, underscore, dash
+const USERNAME_PATTERN = /^[\p{L}\p{N}._-]{3,20}$/u;
 
 router.post('/register', (req, res) => {
   const { username, password } = req.body;
@@ -13,7 +19,11 @@ router.post('/register', (req, res) => {
     return res.status(400).json({ error: 'Username and password required' });
   }
 
-  if (password.length < 4) {
+  if (typeof username !== 'string' || !USERNAME_PATTERN.test(username)) {
+    return res.status(400).json({ error: 'Username must be 3-20 characters: letters, numbers, . _ -' });
+  }
+
+  if (typeof password !== 'string' || password.length < 4) {
     return res.status(400).json({ error: 'Password must be at least 4 characters' });
   }
 

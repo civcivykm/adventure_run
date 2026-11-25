@@ -616,6 +616,8 @@ class ScoreManager {
     this.clock = new THREE.Clock();
     this.lvl = 0;
     this.add_vel = 10;
+    this.last_flash_score = 0;
+    this.is_flashing = false;
   }
 
   update(timeDelta) {
@@ -1492,6 +1494,7 @@ class LoadManager {
   constructor() {
     this.assets = {};
     this.vox = {};
+    this.all_loaded = false;
     this.onload = function () {
     };
     this.onassetload = function () {
@@ -1662,6 +1665,10 @@ class LoadManager {
           return false;
         }
     }
+    if (this.assets[asset].loading) {
+      return;
+    }
+    this.assets[asset].loading = true;
     this.assets[asset].callback();
   }
   load_deps(asset) {
@@ -1672,9 +1679,13 @@ class LoadManager {
     }
   }
   check() {
+    if (this.all_loaded) {
+      return true;
+    }
     for (const asset in this.assets)
       if (!this.assets[asset].status)
         return false;
+    this.all_loaded = true;
     logs.log("All assets loaded, starting the game.");
     this.onload();
     return true;
@@ -2670,19 +2681,7 @@ class InterfaceManager {
       this.btnStartClick(e);
     });
 
-    // Show auth button
-    document.getElementById('btn-show-auth')?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      showAuthForm('login');
-    });
-
-    // Show leaderboard button in homepage
-    document.getElementById('btn-show-leaderboard-home')?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      showLeaderboard();
-    });
-
-    this.buttons.start.addEventListener("click", this.btnStartClick);
+    // Note: auth/leaderboard buttons are wired once in the DOMContentLoaded handler below
     document.getElementById('btn-restart')?.addEventListener('click', (e) => {
       e.stopPropagation();
       this.buttons.restart.classList.add("hidden");
@@ -2690,7 +2689,10 @@ class InterfaceManager {
     });
   }
   btnStartClick(e) {
-    game.interface.buttons.start.display = "none";
+    // Ignore clicks until every 3D asset is ready (prevents crashes on slow connections)
+    if (!load_manager.all_loaded) {
+      return;
+    }
 
     if (!auth.isLoggedIn()) {
       showAuthForm('login');
@@ -2734,7 +2736,9 @@ class InterfaceManager {
 }
 
 // ===== Auth API Integration =====
-const API_BASE_URL = 'https://adventurerunn.onrender.com/api';
+const API_BASE_URL = ['localhost', '127.0.0.1'].includes(window.location.hostname)
+  ? 'http://localhost:3000/api'
+  : 'https://adventurerunn.onrender.com/api';
 
 const auth = {
     token: localStorage.getItem('auth_token'),
@@ -2777,6 +2781,7 @@ const auth = {
             },
             body: JSON.stringify({ score })
         });
+        this.handleUnauthorized(res);
         return await res.json();
     },
 
@@ -2788,10 +2793,11 @@ const auth = {
     },
 
     async getMaxScore() {
-        if (!this.token || !this.userId) return 0;
+        if (!this.token) return 0;
         const res = await fetch(`${API_BASE_URL}/scores/max`, {
             headers: { 'Authorization': `Bearer ${this.token}` }
         });
+        this.handleUnauthorized(res);
         const data = await res.json();
         if (!res.ok) return 0;
         return data.score || 0;
@@ -2806,13 +2812,23 @@ const auth = {
         localStorage.removeItem('auth_userId');
     },
 
+    // Expired or invalid session: sign the player out so they can log in again
+    handleUnauthorized(res) {
+        if (res.status === 401) {
+            this.logout();
+            updateAuthUI();
+        }
+    },
+
     saveSession(data) {
+        // Backend returns the id as "userId"
+        const userId = data.userId ?? data.id;
         this.token = data.token;
         this.username = data.username;
-        this.userId = data.id;
+        this.userId = userId;
         localStorage.setItem('auth_token', data.token);
         localStorage.setItem('auth_username', data.username);
-        localStorage.setItem('auth_userId', data.id);
+        localStorage.setItem('auth_userId', userId);
     }
 };
 
@@ -2855,6 +2871,13 @@ document.getElementById('auth-container')?.addEventListener('click', (e) => {
 
 let leaderboardOpenedFromGameOver = false;
 
+// Escape user-provided text before putting it into innerHTML
+function escapeHTML(text) {
+  return String(text).replace(/[&<>"']/g, (ch) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[ch]));
+}
+
 function showLeaderboard(fromGameOver = false) {
   const leaderboard = document.getElementById('leaderboard');
   const list = document.getElementById('leaderboard-list');
@@ -2872,8 +2895,8 @@ leaderboard.classList.remove('hidden');
   list.innerHTML = '<p>Yükleniyor...</p>';
   
   auth.getLeaderboard().then(scores => {
-    list.innerHTML = scores.map((s, i) => 
-      `<div class="leaderboard-item"><span>#${i + 1} ${s.username}</span><span>${s.score}</span></div>`
+    list.innerHTML = scores.map((s, i) =>
+      `<div class="leaderboard-item"><span>#${i + 1} ${escapeHTML(s.username)}</span><span>${Number(s.score) || 0}</span></div>`
     ).join('') || '<p>Henüz skor yok</p>';
   }).catch(() => {
     list.innerHTML = '<p>Skorlar yüklenirken hata oluştu</p>';
@@ -2982,7 +3005,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Login
   document.getElementById('btn-login')?.addEventListener('click', async () => {
-    const username = document.getElementById('login-username').value;
+    const username = document.getElementById('login-username').value.trim();
     const password = document.getElementById('login-password').value;
     try {
       const data = await auth.login(username, password);
@@ -2997,7 +3020,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Register
   document.getElementById('btn-register')?.addEventListener('click', async () => {
-    const username = document.getElementById('register-username').value;
+    const username = document.getElementById('register-username').value.trim();
     const password = document.getElementById('register-password').value;
     const passwordConfirm = document.getElementById('register-password-confirm').value;
 
@@ -3038,16 +3061,4 @@ document.addEventListener('DOMContentLoaded', () => {
     showLeaderboard(true);
   });
 
-  // Legacy - hide game over when clicked
-  document.getElementById('btn-show-leaderboard')?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-    showLeaderboard(true);
-    showLeaderboard();
-  });
-
-  document.getElementById('btn-show-leaderboard-login')?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    showLeaderboard();
-  });
 });

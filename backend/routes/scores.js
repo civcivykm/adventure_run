@@ -4,6 +4,7 @@ import db from '../database.js';
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'adventure_run_secret_key';
+const MAX_SCORE = 1000000;
 
 function authenticate(req, res, next) {
   const authHeader = req.headers.authorization;
@@ -24,7 +25,8 @@ function authenticate(req, res, next) {
 router.post('/', authenticate, (req, res) => {
   const { score } = req.body;
 
-  if (typeof score !== 'number' || score < 0) {
+  // Scores are whole numbers; reject negative, fractional or absurdly large values
+  if (!Number.isInteger(score) || score < 0 || score > MAX_SCORE) {
     return res.status(400).json({ error: 'Valid score required' });
   }
 
@@ -59,11 +61,11 @@ router.post('/', authenticate, (req, res) => {
 
 router.get('/leaderboard', (req, res) => {
   db.all(
-    `SELECT users.username, MAX(scores.score) as score
-     FROM scores 
-     INNER JOIN users ON scores.user_id = users.id 
+    `SELECT users.username, MAX(scores.score) AS best_score
+     FROM scores
+     INNER JOIN users ON scores.user_id = users.id
      GROUP BY users.id
-     ORDER BY scores.score DESC 
+     ORDER BY best_score DESC
      LIMIT 10`,
     [],
     (err, rows) => {
@@ -71,7 +73,7 @@ router.get('/leaderboard', (req, res) => {
         console.error('Leaderboard error:', err);
         return res.status(500).json({ error: 'Failed to get leaderboard' });
       }
-      res.json(rows);
+      res.json(rows.map((row) => ({ username: row.username, score: row.best_score })));
     }
   );
 });

@@ -254,65 +254,28 @@
 			"İpucu: Limon Soyucusu'nun gardiyanlarına dikkat et!"
 		];
 
-		function simulateLoading() {
-			const loadingBar = document.getElementById('loading-bar');
-			const percentage = document.getElementById('loading-percentage');
-			const status = document.getElementById('loading-status');
-			const tipsEl = document.querySelector('.tips');
+		// The real loading progress (bar + percentage) is driven by LoadManager in js/build.js,
+		// which also switches to the homepage once every asset is ready.
+		// Here we only rotate the status messages and tips while the loader is visible.
+		const loadingSteps = [
+			"Malzemeler toplanıyor...",
+			"Karakter yükleniyor...",
+			"Şeker Krallığı inşa ediliyor...",
+			"Buz Tırmanışı hazırlanıyor...",
+			"Elmaslar sayılıyor..."
+		];
+
+		let loaderStep = 0;
+		const loaderTicker = setInterval(() => {
 			const loaderScreen = document.getElementById('loader-screen');
-			const homepage = document.getElementById('homepage');
-
-			const loadingSteps = [
-				"Malzemeler toplanıyor...",
-				"Karakter yükleniyor...",
-				"Şeker Krallığı inşa ediliyor...",
-				"Buz Tırmanışı hazırlanıyor...",
-				"Elmaslar sayılıyor...",
-				"Hazır!"
-			];
-
-			let progress = 0;
-
-			function load() {
-				if (progress < 100) {
-					progress += Math.random() * 15 + 5;
-					if (progress > 100) progress = 100;
-
-					loadingBar.style.width = progress + '%';
-					percentage.textContent = Math.floor(progress) + '%';
-
-					const stepIndex = Math.floor((progress / 100) * (loadingSteps.length - 1));
-					status.textContent = loadingSteps[stepIndex];
-
-					if (Math.random() > 0.7) {
-						tipsEl.textContent = tips[Math.floor(Math.random() * tips.length)];
-					}
-
-					setTimeout(load, 200 + Math.random() * 300);
-				} else {
-					loaderScreen.classList.add('hidden');
-					homepage.classList.remove('hidden');
-				}
+			if (!loaderScreen || loaderScreen.classList.contains('hidden')) {
+				clearInterval(loaderTicker);
+				return;
 			}
-
-			setTimeout(load, 500);
-		}
-
-		window.addEventListener('load', simulateLoading);
-
-		// Fallback transition after game loads
-		setTimeout(() => {
-			const loader = document.getElementById('loader-screen');
-			const homepage = document.getElementById('homepage');
-			if (loader && !loader.classList.contains('hidden')) {
-				loader.classList.add('hidden');
-				loader.style.display = 'none';
-			}
-			if (homepage) {
-				homepage.classList.remove('hidden');
-				homepage.style.display = 'flex';
-			}
-		}, 4000);
+			loaderStep++;
+			document.getElementById('loading-status').textContent = loadingSteps[loaderStep % loadingSteps.length];
+			document.querySelector('.tips').textContent = tips[Math.floor(Math.random() * tips.length)];
+		}, 1500);
 	</script>
 </body>
 
