@@ -2,6 +2,10 @@
 
 A browser-based 3D endless runner set in an Adventure Time–inspired world, built with **Three.js / WebGL** and a **Node.js + Express + SQLite** backend for accounts and a global leaderboard. No installation needed for players — it runs directly in the browser.
 
+**▶ Play it here: [adventure-run.onrender.com](https://adventure-run.onrender.com)**
+
+> The server runs on a free plan: if nobody has played for a while, the first login can take about a minute while it wakes up.
+
 ![Gameplay](docs/gameplay.jpg)
 
 ## Features
