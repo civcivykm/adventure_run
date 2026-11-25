@@ -1726,6 +1726,7 @@ load_manager.set_loader("ground_bg", [], function () {
 });
 load_manager.set_loader("dyno", ["ground"], function () {
   let parser = new vox.Parser();
+  let loaded = 0; // count finished files (they can arrive in any order)
   let frames = [];
   let framesCount = 7;
   for (let i = 0; i <= framesCount; i++) {
@@ -1737,7 +1738,7 @@ load_manager.set_loader("dyno", ["ground"], function () {
       let dyno = builder.createMesh();
       dyno.castShadow = true;
       frames[i] = dyno;
-      if (frames.length - 1 == framesCount) {
+      if (++loaded == framesCount + 1) {
         load_manager.set_mesh("dyno", frames);
         load_manager.set_status("dyno", true);
         player.setPlayerFrames(load_manager.get_vox("dyno"));
@@ -1747,6 +1748,7 @@ load_manager.set_loader("dyno", ["ground"], function () {
 });
 load_manager.set_loader("dyno_band", ["dyno"], function () {
   let parser = new vox.Parser();
+  let loaded = 0; // count finished files (they can arrive in any order)
   let frames = [];
   let framesCount = 7;
   for (let i = 0; i <= framesCount; i++) {
@@ -1758,7 +1760,7 @@ load_manager.set_loader("dyno_band", ["dyno"], function () {
       let dyno = builder.createMesh();
       dyno.castShadow = true;
       frames[i] = dyno;
-      if (frames.length - 1 == framesCount) {
+      if (++loaded == framesCount + 1) {
         load_manager.set_mesh("dyno_band", frames);
         load_manager.set_status("dyno_band", true);
         player.setPlayerFrames(frames, true);
@@ -1794,6 +1796,7 @@ load_manager.set_loader("dyno_death", ["ground"], function () {
 });
 load_manager.set_loader("cactus", ["ground"], function () {
   let parser = new vox.Parser();
+  let loaded = 0; // count finished files (they can arrive in any order)
   scene.getObjectByName("ground");
   let cactus = [];
   let cactusFiles = ["cactus", "cactus_tall", "cactus_thin", "fcactus", "fcactus_tall", "fcactus_thin"];
@@ -1804,7 +1807,7 @@ load_manager.set_loader("cactus", ["ground"], function () {
       material.map = vox.MeshBuilder.textureFactory.getTexture(voxelData);
       builder.material = material;
       cactus[i] = builder;
-      if (cactus.length == cactusFiles.length) {
+      if (++loaded == cactusFiles.length) {
         load_manager.set_vox("cactus", cactus);
         load_manager.set_status("cactus", true);
       }
@@ -1813,6 +1816,7 @@ load_manager.set_loader("cactus", ["ground"], function () {
 });
 load_manager.set_loader("ptero", ["ground", "cactus"], function () {
   let parser = new vox.Parser();
+  let loaded = 0; // count finished files (they can arrive in any order)
   let frames = [];
   let framesCount = 5;
   for (let i = 0; i <= framesCount; i++) {
@@ -1822,7 +1826,7 @@ load_manager.set_loader("ptero", ["ground", "cactus"], function () {
       material.map = vox.MeshBuilder.textureFactory.getTexture(voxelData);
       builder.material = material;
       frames[i] = builder;
-      if (frames.length - 1 == framesCount) {
+      if (++loaded == framesCount + 1) {
         load_manager.set_vox("ptero", frames);
         load_manager.set_status("ptero", true);
       }
@@ -1831,6 +1835,7 @@ load_manager.set_loader("ptero", ["ground", "cactus"], function () {
 });
 load_manager.set_loader("rocks", ["ground"], function () {
   let parser = new vox.Parser();
+  let loaded = 0; // count finished files (they can arrive in any order)
   let rocks = [];
   let rocksCount = 4;
   for (let i = 0; i <= rocksCount; i++) {
@@ -1840,7 +1845,7 @@ load_manager.set_loader("rocks", ["ground"], function () {
       material.map = vox.MeshBuilder.textureFactory.getTexture(voxelData);
       builder.material = material;
       rocks[i] = builder;
-      if (rocks.length - 1 == rocksCount) {
+      if (++loaded == rocksCount + 1) {
         load_manager.set_vox("rocks", rocks);
         load_manager.set_status("rocks", true);
       }
@@ -1849,6 +1854,7 @@ load_manager.set_loader("rocks", ["ground"], function () {
 });
 load_manager.set_loader("flowers", ["ground"], function () {
   let parser = new vox.Parser();
+  let loaded = 0; // count finished files (they can arrive in any order)
   let flowers = [];
   let flowersCount = 2;
   for (let i = 0; i <= flowersCount; i++) {
@@ -1858,7 +1864,7 @@ load_manager.set_loader("flowers", ["ground"], function () {
       material.map = vox.MeshBuilder.textureFactory.getTexture(voxelData);
       builder.material = material;
       flowers[i] = builder;
-      if (flowers.length - 1 == flowersCount) {
+      if (++loaded == flowersCount + 1) {
         load_manager.set_vox("flowers", flowers);
         load_manager.set_status("flowers", true);
       }
@@ -1867,6 +1873,7 @@ load_manager.set_loader("flowers", ["ground"], function () {
 });
 load_manager.set_loader("misc", ["ground"], function () {
   let parser = new vox.Parser();
+  let loaded = 0; // count finished files (they can arrive in any order)
   let misc2 = [];
   let miscItems = [
     "cactus/0",
@@ -1899,7 +1906,7 @@ load_manager.set_loader("misc", ["ground"], function () {
       builder.material = material;
       builder.misc_type = miscItems[i];
       misc2[i] = builder;
-      if (misc2.length == miscItems.length) {
+      if (++loaded == miscItems.length) {
         load_manager.set_vox("misc", misc2);
         load_manager.set_status("misc", true);
       }
