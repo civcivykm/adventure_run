@@ -14,7 +14,8 @@ export default defineConfig({
       },
       output: {
         // Keep the same structure in dist
-        entryFileNames: 'js/build.js',
+        // Hash in the file name so browsers always load the latest game code after a deploy
+        entryFileNames: 'js/build-[hash].js',
         assetFileNames: 'assets/[name]-[hash][extname]',
         chunkFileNames: 'assets/[name]-[hash].js'
       }
